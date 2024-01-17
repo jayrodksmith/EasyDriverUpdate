@@ -44,7 +44,7 @@ Remove-Item -Path $EasyDriverUpdateDownloadFile -Force
 ```powershell
 Import-Module EasyDriverUpdate
 
-Get-Warranty
+Start-EasyDriverUpdate
 ```
 ## Author
 Jared Smith
