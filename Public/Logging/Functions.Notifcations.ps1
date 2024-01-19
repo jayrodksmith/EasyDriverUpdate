@@ -63,7 +63,7 @@ Function Register-NotificationApp {
 }
 $AppID = "EasyDriverUpdate.Notification"
 $AppDisplayName = "EasyDriverUpdate"
-$AppIconUri = "C:\ProgramData\EasyDriverUpdate\resources\logos\logo_ninjarmm_square.png"
+$AppIconUri = "$PSScriptRoot\resources\logos\logo_ninjarmm_square.png"
 Register-NotificationApp -AppID $AppID -AppDisplayName $AppDisplayName -AppIconUri $AppIconUri
 ## Main Toast Function
 
@@ -72,7 +72,7 @@ function Set-Toast{
     [string]$Toastenable = $true,
     [string]$Toasttitle = "",
     [string]$Toasttext = "",
-    [string]$Toastlogo = "C:\ProgramData\EasyDriverUpdate\resources\logos\logo_ninjarmm_square.png",
+    [string]$Toastlogo = "$PSScriptRoot\resources\logos\logo_ninjarmm_square.png",
     [string]$UniqueIdentifier = "default",
     [switch]$Toastreboot = $false
     )
