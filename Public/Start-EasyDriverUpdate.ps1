@@ -33,16 +33,12 @@ function Start-EasyDriverUpdate {
         .PARAMETER Notifications
         Notfications Enable
 
-        .PARAMETER Autoupdate
-        Autoupdate module
-
         .PARAMETER Geforcedriver
         Studio or Game version of drivers for Gaming cards
 
     #>
     [CmdletBinding(SupportsShouldProcess)]
     param (
-        [string]$githubrepo = "jayrodksmith/EasyDriverUpdate",
         [Switch]$UpdateNvidia,
         [Switch]$UpdateAmd,
         [Switch]$UpdateIntel,
@@ -122,7 +118,8 @@ function Start-EasyDriverUpdate {
     Register-BurntToast
     $AppID = "EasyDriverUpdate.Notification"
     $AppDisplayName = "EasyDriverUpdate"
-    $AppIconUri = "$PSScriptRoot\Logging\resources\logos\logo_ninjarmm_square.png"
+    $RootPath = Split-Path $PSScriptRoot -Parent
+    $AppIconUri = "$RootPath\Private\Logging\resources\logos\logo_ninjarmm_square.png"
     Register-NotificationApp -AppID $AppID -AppDisplayName $AppDisplayName -AppIconUri $AppIconUri
     ###############################################################################
     # Main Script Starts Here
