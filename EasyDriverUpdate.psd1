@@ -69,7 +69,31 @@
     # NestedModules = @()
     
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport = @('Start-EasyDriverUpdate','Set-DriverUpdatesNvidia','Get-DriverLatestVersionNvidia','Functions.Notifcations','Functions.Logging','Set-DriverUpdatesIntel','Get-DownloadUrls','Get-Extract','Get-GPUInfo','Set-GPUtoNinjaRMM','Get-DriverInstalledAmd', 'Get-DriverLatestVersionAmd', 'Set-DriverUpdatesAmd')
+    FunctionsToExport = @(
+        'Start-EasyDriverUpdate',
+        'Set-DriverUpdatesNvidia',
+        'Get-DriverLatestVersionNvidia',
+        'Functions.Notifcations',
+        'Functions.Logging',
+        'Set-DriverUpdatesIntel',
+        'Get-DownloadUrls',
+        'Get-Extract',
+        'Get-GPUInfo',
+        'Set-GPUtoNinjaRMM',
+        'Get-DriverInstalledAmd',
+        'Get-DriverLatestVersionAmd',
+        'Set-DriverUpdatesAmd',
+        'RMM-Error',
+        'RMM-Exit',
+        'RMM-Initilize',
+        'RMM-LogParse',
+        'RMM-Msg',
+        'Set-Toast',
+        'Set-ToastProgress',
+        'Register-BurntToast',
+        'Get-TimeStamp',
+        'Register-NotificationApp'
+    )
     
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
     CmdletsToExport = @()

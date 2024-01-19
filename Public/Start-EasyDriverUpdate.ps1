@@ -106,6 +106,25 @@ function Start-EasyDriverUpdate {
         $null = New-Item -Path $logfilelocation -ItemType Directory -Force
     }
     ###############################################################################
+    # Function - Logging
+    ###############################################################################
+    # Check if the folder exists
+    if (-not (Test-Path -Path $Script:logfilelocation -PathType Container)) {
+        # Create the folder and its parent folders if they don't exist
+        New-Item -Path $Script:logfilelocation -ItemType Directory -Force | Out-Null
+    }
+    $Global:nl = [System.Environment]::NewLine
+    $Global:ErrorCount = 0
+    $global:Output = '' 
+    ###############################################################################
+    # Function - Notifications
+    ###############################################################################
+    Register-BurntToast
+    $AppID = "EasyDriverUpdate.Notification"
+    $AppDisplayName = "EasyDriverUpdate"
+    $AppIconUri = "$PSScriptRoot\Logging\resources\logos\logo_ninjarmm_square.png"
+    Register-NotificationApp -AppID $AppID -AppDisplayName $AppDisplayName -AppIconUri $AppIconUri
+    ###############################################################################
     # Main Script Starts Here
     ###############################################################################
     # Get GPU Info and print to screen
