@@ -9,7 +9,7 @@ Function Register-NotificationApp {
     $HKCR = Get-PSDrive -Name HKCR -ErrorAction SilentlyContinue
     If (!($HKCR))
     {
-        New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT -Scope Script
+        $null = New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT -Scope Script
     }
     $AppRegPath = "HKCR:\AppUserModelId"
     $RegPath = "$AppRegPath\$AppID"
