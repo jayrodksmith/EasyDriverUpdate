@@ -8,5 +8,6 @@ function RMM-Exit{
     Add-content $Script:logfile -value "$(Get-Timestamp) -----------------------------Log End"
     Write-Output "Errors : $Global:ErrorCount"
     RMM-LogParse
-    Exit $ExitCode
+    #Exit $ExitCode
+    return ""
 }
