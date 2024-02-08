@@ -14,7 +14,7 @@ if(-not (Get-Module RunAsUser -ListAvailable)){
     }
 
 #Checking if ToastReboot:// protocol handler is present
-New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT -erroraction silentlycontinue | out-null
+$null = New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT -erroraction silentlycontinue
 $ProtocolHandler = get-item 'HKCR:\ToastReboot' -erroraction 'silentlycontinue'
 if (!$ProtocolHandler) {
     #create handler for reboot
