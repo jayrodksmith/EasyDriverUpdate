@@ -21,11 +21,11 @@ function Get-DriverLatestVersionNvidia {
         $psid = "101"
         $pfid = "816"
         ## Check if Studio or Beta set
-        if ($Script:geforcedriver -eq 'Studio'){
+        if ($geforcedriver -eq 'Studio'){
             $whql = "4"
             $drivername2 = "nsd-dch"
         }
-        if ($Script:geforcedriver -eq 'Game'){
+        if ($geforcedriver -eq 'Game'){
             $whql = "1"
             $drivername2 = "dch"
         }

@@ -6,6 +6,6 @@ function RMM-Error{
   )
   $Global:ErrorCount += 1
   $global:Output += "$(Get-Timestamp) - Error : $Message"+$Global:nl
-  Add-content $Script:logfile -value "$(Get-Timestamp) - Error : $message"
+  Add-content $logfile -value "$(Get-Timestamp) - Error : $message"
   if($messagetype -eq 'Verbose'){Write-Warning "$Message"}elseif($messagetype -eq 'Debug'){Write-Debug "$Message"}
 }

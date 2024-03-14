@@ -1,21 +1,24 @@
 function Get-DriverLatestVersionAmd {
     param (
-        [string]$amddriverdetails = "https://videocardz.com/sections/drivers" # URL to check for driver details
+        [string]$amddriverdetails = "https://www.amd.com/en/support/graphics/amd-radeon-rx-7000-series/amd-radeon-rx-7900-series/amd-radeon-rx-7900xtx" # URL to check for driver details
     )
-    $response = Invoke-WebRequest -Uri $amddriverdetails -UseBasicParsing
+    $response = Invoke-WebRequest -Method Get -Uri $amddriverdetails -UseBasicParsing
     RMM-Msg "Checking $amddriverdetails for driver details" 
-    $matches = [regex]::Matches($response, 'href="([^"]*https://videocardz.com/driver/amd-radeon-software-adrenalin[^"]*)"')
-    $link = $matches.Groups[1].Value
-    RMM-Msg "Checking $link for latest driver details" 
-    $response = Invoke-WebRequest -Uri $link -UseBasicParsing
-    $latestversion = [regex]::Match($response, "Download AMD Radeon Software Adrenalin (\d+\.\d+\.\d+)").Groups[1].Value
-    $matches = [regex]::Matches($response, 'href="([^"]*https://www.amd.com/en/support/kb/release-notes[^"]*)"')
-    $link = $matches.Groups[1].Value
-    RMM-Msg "Checking $link for latest driver download url"
-    Start-Sleep -Seconds 10
-    $response = Invoke-RestMethod -Uri $link
-    $matches = [regex]::Matches($response, 'href="([^"]*https://drivers.amd.com/drivers/whql-amd-software-[^"]*)"')
-    $driverlink = $matches.Groups[1].Value
+    $responselinks = $response.links
+    # Define your regex pattern to match the first part of the link
+    $regexPattern = '(?s)href="(https://drivers\.amd\.com/drivers/whql-amd-software-[^"]*)'
+
+    # Use [regex]::Match to find the first match
+    $match = [regex]::Match($responselinks, $regexPattern)
+
+    # Output the matched first part of the link if a match is found
+    if ($match.Success) {
+        $driverlink = $matches.Groups[1].Value
+        $regexPattern = '\d+\.\d+\.\d+'
+        $matchversion = [regex]::Match($driverlink, $regexPattern)
+        $latestversion = $matchversion.Value
+    } 
+
     # Check if matches were found
     if ($latestversion) {
         # Extract the desired values from the matches

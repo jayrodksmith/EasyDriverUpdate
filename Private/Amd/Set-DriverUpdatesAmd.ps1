@@ -5,8 +5,7 @@ function Set-DriverUpdatesAmd {
     $extractinfo = Get-extract
     if ($gpuInfoamd.DriverUptoDate -eq $True){
         RMM-Msg "AMD Drivers already upto date"
-        $Script:installstatus = "uptodate"
-        return
+        return "UpToDate"
     }
     $amdversion = $gpuInfoamd.DriverLatest
     $amdurl = $gpuInfoamd.DriverLink
@@ -18,6 +17,5 @@ function Set-DriverUpdatesAmd {
     RMM-Msg "Driver installed. You may need to reboot to finish installation." -messagetype Verbose
     RMM-Msg "Driver installed. $amdversion" -messagetype Verbose
     Set-Toast -Toasttitle "Updating Drivers" -Toasttext "$amdversion AMD Drivers Installed" -UniqueIdentifier "default" -Toastenable $notifications
-    $Script:installstatus = "Updated"
-    return
+    return "Updated"
 } 

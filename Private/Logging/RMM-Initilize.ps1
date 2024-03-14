@@ -1,3 +1,3 @@
 function RMM-Initilize{
-    Add-content $Script:logfile -value "$(Get-Timestamp) -----------------------------$Script:logdescription"
+    Add-content $logfile -value "$(Get-Timestamp) -----------------------------$logdescription"
     }

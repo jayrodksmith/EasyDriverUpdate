@@ -4,7 +4,7 @@ function Set-DriverUpdatesintel{
     $extractinfo = Get-extract
     if ($gpuInfointel.DriverUptoDate -eq $True){
       RMM-Msg "Intel Drivers already upto date" -messagetype Verbose
-      $Script:installstatus = "uptodate"
+      $installstatus = "uptodate"
       return
     }
     $intelversion = $gpuInfointel.DriverLatest
@@ -28,6 +28,6 @@ function Set-DriverUpdatesintel{
     Start-Process -FilePath "$extractFolder\installer.exe" -ArgumentList $install_args -wait
     RMM-Msg "Driver installed. You may need to reboot to finish installation." -messagetype Verbose
     RMM-Msg "Driver installed. $intelversion" -messagetype Verbose
-    $Script:installstatus = "Updated"
+    $installstatus = "Updated"
     return
 }

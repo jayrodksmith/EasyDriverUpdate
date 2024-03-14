@@ -46,7 +46,7 @@ function Start-EasyDriverUpdate {
         [Switch]$Silent,
         [ValidateSet('NinjaOne', 'Standalone')]
         [string]$RMMPlatform = "NinjaOne",
-        [bool]$notifications = $true,
+        [bool]$notifications = $false,
         [bool]$autoupdate = $false,
         [ValidateSet('Studio', 'Game')]
         [string]$geforcedriver = "Studio"
@@ -59,8 +59,8 @@ function Start-EasyDriverUpdate {
         (New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)  
     }
     if(Test-Administrator -eq $true){
-        Write-Debug "EasyDriverUpdate running as admin"}
-        else{
+        Write-Debug "EasyDriverUpdate running as admin"
+    } else{
         Write-Warning "EasyDriverUpdate not running as Admin, run this script elevated or as System Context"
         exit 0
     }
@@ -85,11 +85,12 @@ function Start-EasyDriverUpdate {
     # Global Variable Setting
     ###############################################################################
 
-    $Script:EasyDriverUpdatePath = (Join-Path -Path $ENV:ProgramData -ChildPath "EasyDriverUpdate")
-    $Script:logfilelocation = "$EasyDriverUpdatePath\logs"
-    $Script:logfile = "$Script:logfilelocation\EasyDriverUpdate.log"
-    $Script:logdescription = "EasyDriverUpdate"
-    $Script:geforcedriver = $geforcedriver
+    Set-Variable EasyDriverUpdatePath -Value (Join-Path -Path $ENV:ProgramData -ChildPath "EasyDriverUpdate") -Scope Global -option ReadOnly -Force
+    Set-Variable logfilelocation -Value "$EasyDriverUpdatePath\logs" -Scope Global -option ReadOnly -Force
+    Set-Variable logfile -Value "$logfilelocation\EasyDriverUpdate.log" -Scope Global -option ReadOnly -Force
+    Set-Variable logdescription -Value "EasyDriverUpdate" -Scope Global -option ReadOnly -Force
+    Set-Variable geforcedriver -Value $geforcedriver -Scope Global -option ReadOnly -Force
+    Set-Variable notifications -Value $notifications -Scope Global -option ReadOnly -Force
 
     ###############################################################################
     # NIA Installer
@@ -105,9 +106,9 @@ function Start-EasyDriverUpdate {
     # Function - Logging
     ###############################################################################
     # Check if the folder exists
-    if (-not (Test-Path -Path $Script:logfilelocation -PathType Container)) {
+    if (-not (Test-Path -Path $logfilelocation -PathType Container)) {
         # Create the folder and its parent folders if they don't exist
-        New-Item -Path $Script:logfilelocation -ItemType Directory -Force | Out-Null
+        New-Item -Path $logfilelocation -ItemType Directory -Force | Out-Null
     }
     $Global:nl = [System.Environment]::NewLine
     $Global:ErrorCount = 0
@@ -118,7 +119,7 @@ function Start-EasyDriverUpdate {
     Register-BurntToast
     $AppID = "EasyDriverUpdate.Notification"
     $AppDisplayName = "EasyDriverUpdate"
-    $RootPath = Split-Path $PSScriptRoot -Parent
+    $RootPath = Split-Path $PSScriptRoot -Parent -ErrorAction SilentlyContinue | Out-Null
     $AppIconUri = "$RootPath\Private\Logging\resources\logos\logo_ninjarmm_square.png"
     Register-NotificationApp -AppID $AppID -AppDisplayName $AppDisplayName -AppIconUri $AppIconUri
     ###############################################################################
@@ -126,8 +127,7 @@ function Start-EasyDriverUpdate {
     ###############################################################################
     # Get GPU Info and print to screen
     RMM-Initilize
-    $gpuInfo = Get-GPUInfo
-    $Script:gpuInfo = $gpuInfo
+    Set-Variable gpuInfo -Value (Get-GPUInfo) -Scope Global -option ReadOnly -Force
 
     # Send GPU Info to RMM
     if($RMMPlatform -eq "NinjaOne"){
@@ -135,31 +135,40 @@ function Start-EasyDriverUpdate {
     }
     # Cycle through updating drivers if required
     if($UpdateAmd -eq $true){ 
-        Set-DriverUpdatesamd
-        if($Script:installstatus -ne "Updated"){
+        $driverupdatesamd = Set-DriverUpdatesamd
+        if($driverupdatesamd -ne "Updated"){
             Set-Toast -Toasttitle "Driver Check" -Toasttext "No new AMD drivers found" -UniqueIdentifier "nonew" -Toastenable $notifications
+        }
+        if($driverupdatesamd -eq "Updated"){
+            $installstatus = "Updated"
         }
     }
     if($UpdateNvidia -eq $true){
-        Set-DriverUpdatesNvidia
-        if($Script:installstatus -ne "Updated"){
+        $driverupdatesnvidia = Set-DriverUpdatesNvidia
+        if($driverupdatesnvidia -ne "Updated"){
             Set-Toast -Toasttitle "Driver Check" -Toasttext "No new Nvidia drivers found" -UniqueIdentifier "nonew" -Toastenable $notifications
+        }
+        if($driverupdatesnvidia -eq "Updated"){
+            $installstatus = "Updated"
         }
     }
     if($UpdateIntel -eq $true){
-        Set-DriverUpdatesintel
-        if($Script:installstatus -ne "Updated"){
+        $driverupdatesintel = Set-DriverUpdatesintel
+        if($driverupdatesintel -ne "Updated"){
             Set-Toast -Toasttitle "Driver Check" -Toasttext "No new Intel drivers found" -UniqueIdentifier "nonew" -Toastenable $notifications
-        } 
+        }
+        if($driverupdatesintel -eq "Updated"){
+            $installstatus = "Updated"
+        }
     }
     $gpuInfo
     # Restart machine if required
-    if($Restart -eq $true -and $Script:installstatus -eq "Updated"){
+    if($Restart -eq $true -and $installstatus -eq "Updated"){
         shutdown /r /t 30 /c "In 30 seconds, the computer will be restarted to finish installing GPU Drivers"
         RMM-Exit 0
     }
 
-    if($Restart -eq $false -and $Script:installstatus -eq "Updated"){
+    if($Restart -eq $false -and $installstatus -eq "Updated"){
         Set-Toast -Toasttitle "Updating Drivers" -Toasttext "Finished installing drivers please reboot" -UniqueIdentifier "default" -Toastreboot -Toastenable $notifications
         RMM-Exit 0
     }
