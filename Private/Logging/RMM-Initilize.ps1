@@ -1,3 +1,5 @@
 function RMM-Initilize{
-    Add-content $logfile -value "$(Get-Timestamp) -----------------------------$logdescription"
+    if($logging -eq $true){
+        Add-content $logfile -value "$(Get-Timestamp) -----------------------------$logdescription"
     }
+}

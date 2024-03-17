@@ -48,6 +48,7 @@ function Start-EasyDriverUpdate {
         [string]$RMMPlatform = "NinjaOne",
         [bool]$notifications = $false,
         [bool]$autoupdate = $false,
+        [bool]$logging = $true,
         [ValidateSet('Studio', 'Game')]
         [string]$geforcedriver = "Studio"
     )
@@ -81,6 +82,16 @@ function Start-EasyDriverUpdate {
     if(!$Restart) {$Restart = $false}
     if($Silent -eq 'true'){$notifications = $false}
 
+    ## Check if module is installed and disable notifications if not exist
+    $modulelocation1 = "C:\Program Files\WindowsPowerShellCustom\Modules\EasyDriverUpdate\0.5.0\Private\Logging\resources\logos"
+    $modulelocation2 = "C:\Program Files\WindowsPowerShell\Modules\EasyDriverUpdate\0.5.0\Private\Logging\resources\logos"
+    if ((Test-Path -Path $modulelocation1) -eq $false){
+        $notifications = $false
+    } 
+    if ((Test-Path -Path $modulelocation2) -eq $false){
+        $notifications = $false
+    } 
+
     ###############################################################################
     # Global Variable Setting
     ###############################################################################
@@ -91,6 +102,7 @@ function Start-EasyDriverUpdate {
     Set-Variable logdescription -Value "EasyDriverUpdate" -Scope Global -option ReadOnly -Force
     Set-Variable geforcedriver -Value $geforcedriver -Scope Global -option ReadOnly -Force
     Set-Variable notifications -Value $notifications -Scope Global -option ReadOnly -Force
+    Set-Variable logging -Value $logging -Scope Global -option ReadOnly -Force
 
     ###############################################################################
     # NIA Installer
@@ -116,12 +128,14 @@ function Start-EasyDriverUpdate {
     ###############################################################################
     # Function - Notifications
     ###############################################################################
-    Register-BurntToast
-    $AppID = "EasyDriverUpdate.Notification"
-    $AppDisplayName = "EasyDriverUpdate"
-    $RootPath = Split-Path $PSScriptRoot -Parent -ErrorAction SilentlyContinue | Out-Null
-    $AppIconUri = "$RootPath\Private\Logging\resources\logos\logo_ninjarmm_square.png"
-    Register-NotificationApp -AppID $AppID -AppDisplayName $AppDisplayName -AppIconUri $AppIconUri
+    if ($notifications -ne $false){
+        Register-BurntToast
+        $AppID = "EasyDriverUpdate.Notification"
+        $AppDisplayName = "EasyDriverUpdate"
+        $RootPath = Split-Path $PSScriptRoot -Parent -ErrorAction SilentlyContinue | Out-Null
+        $AppIconUri = "$RootPath\Private\Logging\resources\logos\logo_ninjarmm_square.png"
+        Register-NotificationApp -AppID $AppID -AppDisplayName $AppDisplayName -AppIconUri $AppIconUri
+    }
     ###############################################################################
     # Main Script Starts Here
     ###############################################################################

@@ -5,7 +5,13 @@ function RMM-Error{
     [string]$messagetype = 'Silent'
   )
   $Global:ErrorCount += 1
-  $global:Output += "$(Get-Timestamp) - Error : $Message"+$Global:nl
-  Add-content $logfile -value "$(Get-Timestamp) - Error : $message"
-  if($messagetype -eq 'Verbose'){Write-Warning "$Message"}elseif($messagetype -eq 'Debug'){Write-Debug "$Message"}
+  if($logging -eq $true){
+    $global:Output += "$(Get-Timestamp) - Error : $Message"+$Global:nl
+    Add-content $logfile -value "$(Get-Timestamp) - Error : $message"
+  }
+  if($messagetype -eq 'Verbose'){
+      Write-Warning "$Message"
+  } elseif($messagetype -eq 'Debug'){
+      Write-Debug "$Message"
+  }
 }

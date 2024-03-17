@@ -1,7 +1,14 @@
 function Get-DriverLatestVersionNvidia {
     ## Check OS Level
-    if ($cim_os -match "Windows 11"){$os = "135"}
-    elseif ($cim_os-match "Windows 10"){$os = "57"}
+    if ($cim_os -match "Windows 11"){
+        $os = "135"
+    }
+    elseif ($cim_os -match "Windows 10"){
+        $os = "57"
+    }else {
+        # Default to windows 11 if no match
+        $os = "135"
+    }
     if ($exists_nvidia.name -match "Quadro|NVIDIA RTX|NVIDIA T600|NVIDIA T1000|NVIDIA T400") {
         $nsd = ""
         $windowsVersion = if (($cim_os -match "Windows 11")-or($cim_os -match "Windows 10")){"win10-win11"}elseif(($cim_os -match "Windows 7")-or($cim_os -match "Windows 8")){"win8-win7"}
@@ -12,14 +19,14 @@ function Get-DriverLatestVersionNvidia {
         $psid = "122"
         $pfid = "967"
         $whql = "1"
-        }elseif ($exists_nvidia.name -match "Geforce") {
+    } elseif ($exists_nvidia.name -match "Geforce") {
         $nsd = "nsd-"
         $windowsVersion = if (($cim_os -match "Windows 11")-or($cim_os -match "Windows 10")){"win10-win11"}elseif(($cim_os -match "Windows 7")-or($cim_os -match "Windows 8")){"win8-win7"}
         $windowsArchitecture = if ([Environment]::Is64BitOperatingSystem){"64bit"}else{"32bit"}
         $cardtype = "/"
         $drivername1 = "desktop"
-        $psid = "101"
-        $pfid = "816"
+        $psid = "127"
+        $pfid = "995"
         ## Check if Studio or Beta set
         if ($geforcedriver -eq 'Studio'){
             $whql = "4"
@@ -29,7 +36,19 @@ function Get-DriverLatestVersionNvidia {
             $whql = "1"
             $drivername2 = "dch"
         }
-    }   
+    } elseif ($exists_nvidia.name -eq $null){
+        # If no card set, default to 4090/win11/studio for driver check
+        $nsd = "nsd-"
+        $windowsVersion = "win10-win11"
+        $os = "135"
+        $windowsArchitecture = if ([Environment]::Is64BitOperatingSystem){"64bit"}else{"32bit"}
+        $cardtype = "/"
+        $drivername1 = "desktop"
+        $psid = "127"
+        $pfid = "995"
+        $whql = "4"
+        $drivername2 = "nsd-dch"
+    }
     # Checking latest driver version from Nvidia website
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
     $linkcreate = 'https://www.nvidia.com/Download/processFind.aspx?psid='+$psid+'&pfid='+$pfid+'&osid='+$os+'&lid=1&whql='+$whql+'&lang=en-us&ctk=0&qnfslb=10&dtcid=1'
