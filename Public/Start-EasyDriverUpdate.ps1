@@ -26,7 +26,9 @@ function Start-EasyDriverUpdate {
         
         .PARAMETER Silent
         No Notfications
-        
+
+        Disable logging to file
+
         .PARAMETER RMMPlatform
         StandAlone or NinjaRMM support
 
