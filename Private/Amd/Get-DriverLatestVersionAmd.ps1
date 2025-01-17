@@ -9,7 +9,7 @@ function Get-DriverLatestVersionAmd {
     RMM-Msg "Checking $amddriverdetails for driver details" 
     $responselinks = $response.links
     # Use Select-String to find the line containing the URL
-    $line = $responselinks | Select-String -Pattern "https://www.amd.com/en/support/kb/release-notes" | Select-Object -First 1
+    $line = $responselinks | Select-String -Pattern "https://www.amd.com/en/resources/support-articles/release-notes" | Select-Object -First 1
     $latestversion = $line.ToString() -replace ".*data-content='([^']*)'.*", '$1'
     $useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
     $referrer = "https://www.amd.com/en/support/graphics/amd-radeon-rx-7000-series/amd-radeon-rx-7900-series/amd-radeon-rx-7900xtx"
