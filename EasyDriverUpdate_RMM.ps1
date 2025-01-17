@@ -398,7 +398,7 @@ function Get-DriverLatestVersionAmd {
     RMM-Msg "Checking $amddriverdetails for driver details" 
     $responselinks = $response.links
     # Use Select-String to find the line containing the URL
-    $line = $responselinks | Select-String -Pattern "https://www.amd.com/en/support/kb/release-notes" | Select-Object -First 1
+    $line = $responselinks | Select-String -Pattern "https://www.amd.com/en/resources/support-articles/release-notes" | Select-Object -First 1
     $latestversion = $line.ToString() -replace ".*data-content='([^']*)'.*", '$1'
     $useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
     $referrer = "https://www.amd.com/en/support/graphics/amd-radeon-rx-7000-series/amd-radeon-rx-7900-series/amd-radeon-rx-7900xtx"
@@ -438,6 +438,7 @@ function Get-DriverLatestVersionAmd {
     return $latest_version_amd, $driverLink_amd
 }
 
+
 function Set-DriverUpdatesAmd {
     RMM-Msg "Script Mode: `tUpdating AMD drivers" -messagetype Verbose
     Set-Toast -Toasttitle "Updating Drivers" -Toasttext "Updating AMD Drivers" -UniqueIdentifier "default" -Toastenable $notifications
@@ -459,168 +460,6 @@ function Set-DriverUpdatesAmd {
     Set-Toast -Toasttitle "Updating Drivers" -Toasttext "$amdversion AMD Drivers Installed" -UniqueIdentifier "default" -Toastenable $notifications
     return "Updated"
 } 
-
-function Get-DriverLatestVersionNvidia {
-    ## Check OS Level
-    if ($cim_os -match "Windows 11"){
-        $os = "135"
-    }
-    elseif ($cim_os -match "Windows 10"){
-        $os = "57"
-    }else {
-        # Default to windows 11 if no match
-        $os = "135"
-    }
-    if ($exists_nvidia.name -match "Quadro|NVIDIA RTX|NVIDIA T600|NVIDIA T1000|NVIDIA T400") {
-        $nsd = ""
-        $windowsVersion = if (($cim_os -match "Windows 11")-or($cim_os -match "Windows 10")){"win10-win11"}elseif(($cim_os -match "Windows 7")-or($cim_os -match "Windows 8")){"win8-win7"}
-        $windowsArchitecture = if ([Environment]::Is64BitOperatingSystem){"64bit"}else{"32bit"}
-        $cardtype = "/Quadro_Certified/"
-        $drivername1 = "quadro-rtx-desktop-notebook"
-        $drivername2 = "dch"
-        $psid = "122"
-        $pfid = "967"
-        $whql = "1"
-    } elseif ($exists_nvidia.name -match "Geforce") {
-        $nsd = "nsd-"
-        $windowsVersion = if (($cim_os -match "Windows 11")-or($cim_os -match "Windows 10")){"win10-win11"}elseif(($cim_os -match "Windows 7")-or($cim_os -match "Windows 8")){"win8-win7"}
-        $windowsArchitecture = if ([Environment]::Is64BitOperatingSystem){"64bit"}else{"32bit"}
-        $cardtype = "/"
-        $drivername1 = "desktop"
-        $psid = "127"
-        $pfid = "995"
-        ## Check if Studio or Beta set
-        if ($geforcedriver -eq 'Studio'){
-            $whql = "4"
-            $drivername2 = "nsd-dch"
-        }
-        if ($geforcedriver -eq 'Game'){
-            $whql = "1"
-            $drivername2 = "dch"
-        }
-    } elseif ($exists_nvidia.name -eq $null){
-        # If no card set, default to 4090/win11/studio for driver check
-        $nsd = "nsd-"
-        $windowsVersion = "win10-win11"
-        $os = "135"
-        $windowsArchitecture = if ([Environment]::Is64BitOperatingSystem){"64bit"}else{"32bit"}
-        $cardtype = "/"
-        $drivername1 = "desktop"
-        $psid = "127"
-        $pfid = "995"
-        $whql = "4"
-        $drivername2 = "nsd-dch"
-    }
-    # Checking latest driver version from Nvidia website
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
-    $linkcreate = 'https://www.nvidia.com/Download/processFind.aspx?psid='+$psid+'&pfid='+$pfid+'&osid='+$os+'&lid=1&whql='+$whql+'&lang=en-us&ctk=0&qnfslb=10&dtcid=1'
-    $link = Invoke-WebRequest -Uri $linkcreate -Method GET -UseBasicParsing
-    $link -match '<td class="gridItem">([^<]+?)</td>' | Out-Null
-    $version = $matches[1]
-    if ($version -match "R"){
-        ## Write-Host "Replacing invalid chars"
-        $latest_version_nvidia = $version -replace '^.*\(|\)$',''
-        RMM-Msg "Latest Nvidia driver : $latest_version_nvidia"
-        }else {
-        $latest_version_nvidia = $version
-        RMM-Msg "Latest Nvidia driver : $latest_version_nvidia"
-    }  
-        # Create download URL
-        $url = "https://international.download.nvidia.com/Windows$cardtype$latest_version_nvidia/$latest_version_nvidia-$drivername1-$windowsVersion-$windowsArchitecture-international-$drivername2-whql.exe"
-        $rp_url = "https://international.download.nvidia.com/Windows$cardtype$latest_version_nvidia/$latest_version_nvidia-$drivername1-$windowsVersion-$windowsArchitecture-international-$drivername2-whql-rp.exe"
-    return $latest_version_nvidia, $url, $rp_url
-}
-
-function Set-DriverUpdatesNvidia {
-    param (
-    [switch]$clean = $false, # Will delete old drivers and install the new ones
-    [string]$folder = "C:\Temp"   # Downloads and extracts the driver here
-    )
-    RMM-Msg "Script Mode: `tUpdating NVIDIA drivers" -messagetype Verbose
-    Set-Toast -Toasttitle "Updating Drivers" -Toasttext "Updating Nvidia Drivers" -UniqueIdentifier "default" -Toastenable $notifications
-    $gpuInfoNvidia = $gpuInfo | Where-Object { $_.Name -match "nvidia" }
-    $extractinfo = Get-extract
-    if ($gpuInfoNvidia.DriverUptoDate -eq $True){
-        RMM-Msg "Nvidia Drivers already upto date" -messagetype Verbose
-        return "UptoDate"
-    }
-
-    # Temp folder
-    New-Item -Path $folder -ItemType Directory 2>&1 | Out-Null
-    $nvidiaTempFolder = "$folder\NVIDIA"
-    New-Item -Path $nvidiaTempFolder -ItemType Directory 2>&1 | Out-Null
-
-    # Variable Set
-    $extractFolder = "$nvidiaTempFolder\$($gpuInfoNvidia.DriverLatest.Trim())"
-    $filesToExtract = "Display.Driver HDAudio NVI2 PhysX EULA.txt ListDevices.txt setup.cfg setup.exe"
-
-    # Downloading the installer
-    $dlFile = "$nvidiaTempFolder\$($gpuInfoNvidia.DriverLatest.Trim()).exe"
-    Get-DownloadUrls -urllist $gpuInfoNvidia.DriverLink -downloadLocation $dlFile
-
-    # Extract the installer
-    if ($extractinfo.'7zipinstalled') {
-        Start-Process -FilePath $extractinfo.archiverProgram -NoNewWindow -ArgumentList "x -bso0 -bsp1 -bse1 -aoa $dlFile $filesToExtract -o""$extractFolder""" -wait
-    }else {
-        RMM-Error "Something went wrong. No archive program detected. This should not happen." -messagetype Verbose
-        RMM-Exit 1
-    }
-
-    # Remove unneeded dependencies from setup.cfg
-    (Get-Content "$extractFolder\setup.cfg") | Where-Object { $_ -notmatch 'name="\${{(EulaHtmlFile|FunctionalConsentFile|PrivacyPolicyFile)}}' } | Set-Content "$extractFolder\setup.cfg" -Encoding UTF8 -Force
-
-    # Installing drivers
-    RMM-Msg "Installing Nvidia drivers now..." -messagetype Verbose
-    $install_args = "-passive -noreboot -noeula -nofinish -s"
-    if ($clean) {
-        $install_args = $install_args + " -clean"
-    }
-    Start-Process -FilePath "$extractFolder\setup.exe" -ArgumentList $install_args -wait
-
-    # Cleaning up downloaded files
-    RMM-Msg "Deleting downloaded files" -messagetype Verbose
-    Remove-Item $nvidiaTempFolder -Recurse -Force
-
-    # Driver installed, requesting a reboot
-    RMM-Msg "Driver installed. You may need to reboot to finish installation." -messagetype Verbose
-    RMM-Msg "Driver installed. $($gpuInfoNvidia.DriverLatest)" -messagetype Verbose
-    Set-Toast -Toasttitle "Updating Drivers" -Toasttext "$($gpuInfoNvidia.DriverLatest) Nvidia Drivers Installed" -UniqueIdentifier "default" -Toastenable $notifications
-    return "Updated"
-}
-
-function Set-DriverUpdatesintel{
-    RMM-Msg "Script Mode: `tUpdating Intel drivers" -messagetype Verbose
-    $gpuInfointel = $gpuInfo | Where-Object { $_.Name -match "intel" }
-    $extractinfo = Get-extract
-    if ($gpuInfointel.DriverUptoDate -eq $True){
-      RMM-Msg "Intel Drivers already upto date" -messagetype Verbose
-      $installstatus = "uptodate"
-      return
-    }
-    $intelversion = $gpuInfointel.DriverLatest
-    $intelurl = $gpuInfointel.DriverLink
-    $inteldriverfile = "C:\temp\ninjarmm\$intelversion.exe"
-    mkdir "C:\temp\ninjarmm\$intelversion"
-    $extractFolder = "C:\temp\ninjarmm\$intelversion"
-    if (-not(Test-Path -Path $inteldriverfile -PathType Leaf)){
-    Invoke-WebRequest -Uri $intelurl -Headers @{'Referer' = 'https://www.intel.com/'} -Outfile C:\temp\ninjarmm\$intelversion.exe -usebasicparsing
-    }
-    if ($extractinfo.'7zipinstalled') {
-      Start-Process -FilePath $extractinfo.archiverProgram -NoNewWindow -ArgumentList "x -bso0 -bsp1 -bse1 -aoa $inteldriverfile -o""$extractFolder""" -wait
-  }else {
-      RMM-Error "Something went wrong. No archive program detected. This should not happen." -messagetype Verbose
-      RMM-Exit 1
-  }
-  
-    # Installing drivers
-    RMM-Msg "Installing Intel drivers now..." -messagetype Verbose
-    $install_args = "--silent"
-    Start-Process -FilePath "$extractFolder\installer.exe" -ArgumentList $install_args -wait
-    RMM-Msg "Driver installed. You may need to reboot to finish installation." -messagetype Verbose
-    RMM-Msg "Driver installed. $intelversion" -messagetype Verbose
-    $installstatus = "Updated"
-    return
-}
 
 function Get-TimeStamp() {
     return (Get-Date).ToString("dd-MM-yyyy HH:mm:ss")
@@ -945,6 +784,134 @@ function Get-extract{
     return $extractinfo 
 }
 
+function Get-DriverLatestVersionNvidia {
+    ## Check OS Level
+    if ($cim_os -match "Windows 11"){
+        $os = "135"
+    }
+    elseif ($cim_os -match "Windows 10"){
+        $os = "57"
+    }else {
+        # Default to windows 11 if no match
+        $os = "135"
+    }
+    if ($exists_nvidia.name -match "Quadro|NVIDIA RTX|NVIDIA T600|NVIDIA T1000|NVIDIA T400") {
+        $nsd = ""
+        $windowsVersion = if (($cim_os -match "Windows 11")-or($cim_os -match "Windows 10")){"win10-win11"}elseif(($cim_os -match "Windows 7")-or($cim_os -match "Windows 8")){"win8-win7"}
+        $windowsArchitecture = if ([Environment]::Is64BitOperatingSystem){"64bit"}else{"32bit"}
+        $cardtype = "/Quadro_Certified/"
+        $drivername1 = "quadro-rtx-desktop-notebook"
+        $drivername2 = "dch"
+        $psid = "122"
+        $pfid = "967"
+        $whql = "1"
+    } elseif ($exists_nvidia.name -match "Geforce") {
+        $nsd = "nsd-"
+        $windowsVersion = if (($cim_os -match "Windows 11")-or($cim_os -match "Windows 10")){"win10-win11"}elseif(($cim_os -match "Windows 7")-or($cim_os -match "Windows 8")){"win8-win7"}
+        $windowsArchitecture = if ([Environment]::Is64BitOperatingSystem){"64bit"}else{"32bit"}
+        $cardtype = "/"
+        $drivername1 = "desktop"
+        $psid = "127"
+        $pfid = "995"
+        ## Check if Studio or Beta set
+        if ($geforcedriver -eq 'Studio'){
+            $whql = "4"
+            $drivername2 = "nsd-dch"
+        }
+        if ($geforcedriver -eq 'Game'){
+            $whql = "1"
+            $drivername2 = "dch"
+        }
+    } elseif ($exists_nvidia.name -eq $null){
+        # If no card set, default to 4090/win11/studio for driver check
+        $nsd = "nsd-"
+        $windowsVersion = "win10-win11"
+        $os = "135"
+        $windowsArchitecture = if ([Environment]::Is64BitOperatingSystem){"64bit"}else{"32bit"}
+        $cardtype = "/"
+        $drivername1 = "desktop"
+        $psid = "127"
+        $pfid = "995"
+        $whql = "4"
+        $drivername2 = "nsd-dch"
+    }
+    # Checking latest driver version from Nvidia website
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+    $linkcreate = 'https://www.nvidia.com/Download/processFind.aspx?psid='+$psid+'&pfid='+$pfid+'&osid='+$os+'&lid=1&whql='+$whql+'&lang=en-us&ctk=0&qnfslb=10&dtcid=1'
+    $link = Invoke-WebRequest -Uri $linkcreate -Method GET -UseBasicParsing
+    $link -match '<td class="gridItem">([^<]+?)</td>' | Out-Null
+    $version = $matches[1]
+    if ($version -match "R"){
+        ## Write-Host "Replacing invalid chars"
+        $latest_version_nvidia = $version -replace '^.*\(|\)$',''
+        RMM-Msg "Latest Nvidia driver : $latest_version_nvidia"
+        }else {
+        $latest_version_nvidia = $version
+        RMM-Msg "Latest Nvidia driver : $latest_version_nvidia"
+    }  
+        # Create download URL
+        $url = "https://international.download.nvidia.com/Windows$cardtype$latest_version_nvidia/$latest_version_nvidia-$drivername1-$windowsVersion-$windowsArchitecture-international-$drivername2-whql.exe"
+        $rp_url = "https://international.download.nvidia.com/Windows$cardtype$latest_version_nvidia/$latest_version_nvidia-$drivername1-$windowsVersion-$windowsArchitecture-international-$drivername2-whql-rp.exe"
+    return $latest_version_nvidia, $url, $rp_url
+}
+
+function Set-DriverUpdatesNvidia {
+    param (
+    [switch]$clean = $false, # Will delete old drivers and install the new ones
+    [string]$folder = "C:\Temp"   # Downloads and extracts the driver here
+    )
+    RMM-Msg "Script Mode: `tUpdating NVIDIA drivers" -messagetype Verbose
+    Set-Toast -Toasttitle "Updating Drivers" -Toasttext "Updating Nvidia Drivers" -UniqueIdentifier "default" -Toastenable $notifications
+    $gpuInfoNvidia = $gpuInfo | Where-Object { $_.Name -match "nvidia" }
+    $extractinfo = Get-extract
+    if ($gpuInfoNvidia.DriverUptoDate -eq $True){
+        RMM-Msg "Nvidia Drivers already upto date" -messagetype Verbose
+        return "UptoDate"
+    }
+
+    # Temp folder
+    New-Item -Path $folder -ItemType Directory 2>&1 | Out-Null
+    $nvidiaTempFolder = "$folder\NVIDIA"
+    New-Item -Path $nvidiaTempFolder -ItemType Directory 2>&1 | Out-Null
+
+    # Variable Set
+    $extractFolder = "$nvidiaTempFolder\$($gpuInfoNvidia.DriverLatest.Trim())"
+    $filesToExtract = "Display.Driver HDAudio NVI2 PhysX EULA.txt ListDevices.txt setup.cfg setup.exe"
+
+    # Downloading the installer
+    $dlFile = "$nvidiaTempFolder\$($gpuInfoNvidia.DriverLatest.Trim()).exe"
+    Get-DownloadUrls -urllist $gpuInfoNvidia.DriverLink -downloadLocation $dlFile
+
+    # Extract the installer
+    if ($extractinfo.'7zipinstalled') {
+        Start-Process -FilePath $extractinfo.archiverProgram -NoNewWindow -ArgumentList "x -bso0 -bsp1 -bse1 -aoa $dlFile $filesToExtract -o""$extractFolder""" -wait
+    }else {
+        RMM-Error "Something went wrong. No archive program detected. This should not happen." -messagetype Verbose
+        RMM-Exit 1
+    }
+
+    # Remove unneeded dependencies from setup.cfg
+    (Get-Content "$extractFolder\setup.cfg") | Where-Object { $_ -notmatch 'name="\${{(EulaHtmlFile|FunctionalConsentFile|PrivacyPolicyFile)}}' } | Set-Content "$extractFolder\setup.cfg" -Encoding UTF8 -Force
+
+    # Installing drivers
+    RMM-Msg "Installing Nvidia drivers now..." -messagetype Verbose
+    $install_args = "-passive -noreboot -noeula -nofinish -s"
+    if ($clean) {
+        $install_args = $install_args + " -clean"
+    }
+    Start-Process -FilePath "$extractFolder\setup.exe" -ArgumentList $install_args -wait
+
+    # Cleaning up downloaded files
+    RMM-Msg "Deleting downloaded files" -messagetype Verbose
+    Remove-Item $nvidiaTempFolder -Recurse -Force
+
+    # Driver installed, requesting a reboot
+    RMM-Msg "Driver installed. You may need to reboot to finish installation." -messagetype Verbose
+    RMM-Msg "Driver installed. $($gpuInfoNvidia.DriverLatest)" -messagetype Verbose
+    Set-Toast -Toasttitle "Updating Drivers" -Toasttext "$($gpuInfoNvidia.DriverLatest) Nvidia Drivers Installed" -UniqueIdentifier "default" -Toastenable $notifications
+    return "Updated"
+}
+
 function Set-GPUtoNinjaRMM {
     RMM-Msg "Script Mode: `tLogging details to NinjaRMM" -messagetype Verbose
     foreach ($gpu in $gpuInfo) {
@@ -984,4 +951,38 @@ Ninja-Property-Set hardwarediscretegpu "Not Detected"
 return
 }
 
-Get-Warranty
+function Set-DriverUpdatesintel{
+    RMM-Msg "Script Mode: `tUpdating Intel drivers" -messagetype Verbose
+    $gpuInfointel = $gpuInfo | Where-Object { $_.Name -match "intel" }
+    $extractinfo = Get-extract
+    if ($gpuInfointel.DriverUptoDate -eq $True){
+      RMM-Msg "Intel Drivers already upto date" -messagetype Verbose
+      $installstatus = "uptodate"
+      return
+    }
+    $intelversion = $gpuInfointel.DriverLatest
+    $intelurl = $gpuInfointel.DriverLink
+    $inteldriverfile = "C:\temp\ninjarmm\$intelversion.exe"
+    mkdir "C:\temp\ninjarmm\$intelversion"
+    $extractFolder = "C:\temp\ninjarmm\$intelversion"
+    if (-not(Test-Path -Path $inteldriverfile -PathType Leaf)){
+    Invoke-WebRequest -Uri $intelurl -Headers @{'Referer' = 'https://www.intel.com/'} -Outfile C:\temp\ninjarmm\$intelversion.exe -usebasicparsing
+    }
+    if ($extractinfo.'7zipinstalled') {
+      Start-Process -FilePath $extractinfo.archiverProgram -NoNewWindow -ArgumentList "x -bso0 -bsp1 -bse1 -aoa $inteldriverfile -o""$extractFolder""" -wait
+  }else {
+      RMM-Error "Something went wrong. No archive program detected. This should not happen." -messagetype Verbose
+      RMM-Exit 1
+  }
+  
+    # Installing drivers
+    RMM-Msg "Installing Intel drivers now..." -messagetype Verbose
+    $install_args = "--silent"
+    Start-Process -FilePath "$extractFolder\installer.exe" -ArgumentList $install_args -wait
+    RMM-Msg "Driver installed. You may need to reboot to finish installation." -messagetype Verbose
+    RMM-Msg "Driver installed. $intelversion" -messagetype Verbose
+    $installstatus = "Updated"
+    return
+}
+
+Start-EasyDriverUpdate
