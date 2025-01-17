@@ -52,7 +52,7 @@ jobs:
         $combinedContent = $getWarrantyFunction + "`n`n" + $combinedContent
         
         # Add Get-Warranty function call at the end of the script
-        $combinedContent += 'Get-Warranty'
+        $combinedContent += 'Start-EasyDriverUpdate'
         
         # Check if the combined content is different from the existing content
         $existingContent = Get-Content $outputFilePath -Raw -ErrorAction SilentlyContinue
